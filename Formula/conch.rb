@@ -1,7 +1,7 @@
 class Conch < Formula
   desc "Voice loop for Claude Code: hear your sessions speak, talk your prompts back"
   homepage "https://github.com/stupart/conch"
-  version "0.2.0"
+  version "0.2.1"
   license "MIT"
 
   depends_on "sox"          # microphone capture
@@ -10,17 +10,35 @@ class Conch < Formula
   depends_on :macos
 
   on_arm do
-    url "https://github.com/stupart/conch/releases/download/v0.2.0/conch-macos-arm64.tar.gz"
-    sha256 "f4bcfc088ff3023d1ccb52f4b532ad58cf512508bf7f44a19123704f2b8642a2"
+    url "https://github.com/stupart/conch/releases/download/v0.2.1/conch-macos-arm64.tar.gz"
+    sha256 "0a07fd254508a8d0a9fa8b00d6ff5f458a06339ac91ba54bfc135b95d3c12a9a"
   end
 
   on_intel do
-    url "https://github.com/stupart/conch/releases/download/v0.2.0/conch-macos-x64.tar.gz"
-    sha256 "2a02205f1427e1a7313be2bbd0a246ad4b9a59dc8820cc5ae478dfa227b04711"
+    url "https://github.com/stupart/conch/releases/download/v0.2.1/conch-macos-x64.tar.gz"
+    sha256 "27db70caca847d985b13a79fdbdeb91547b3cc2a7e2d2d12001e30d6af8a6ef6"
   end
 
   def install
     bin.install "conch"
+    # The app ships in the formula rather than a cask on purpose: Homebrew
+    # quarantines cask artifacts, and a quarantined app that is signed but not
+    # notarized is refused by Gatekeeper. A formula-installed bundle is not
+    # quarantined, so one `brew install` delivers a working CLI and app.
+    prefix.install "conch.app" if File.exist?("conch.app")
+  end
+
+  def post_install
+    app = prefix/"conch.app"
+    return unless app.exist?
+
+    link = Pathname.new("/Applications/conch.app")
+    # Only ever replace a link we own — never a user's real app bundle.
+    link.unlink if link.symlink?
+    link.make_symlink(app) unless link.exist?
+  rescue StandardError
+    # /Applications may be unwritable; the app still lives in the prefix.
+    nil
   end
 
   def caveats
@@ -36,6 +54,10 @@ class Conch < Formula
 
       Natural per-session voices are optional (falls back to the macOS `say` voice):
         uv tool install --with "misaki[en]" "mlx-audio[server]"
+
+      conch.app is linked into /Applications — it shows every session, renders
+      finished work inline, and lets you talk back. The terminal dashboard
+      (`conch`) is still there for ssh.
 
       To remove conch and everything it wired up:
         conch uninstall
