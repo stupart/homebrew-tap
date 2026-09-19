@@ -9,12 +9,28 @@ class Seashell < Formula
   depends_on "cmake" => :build
   depends_on "ffmpeg"
   depends_on macos: :sonoma
-  depends_on "oven-sh/bun/bun"
   depends_on "sox"
+
+  # Bundle the runtime privately so a fresh install needs no additional tap.
+  resource "bun-runtime" do
+    on_arm do
+      url "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-darwin-aarch64.zip"
+      sha256 "90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f"
+    end
+    on_intel do
+      url "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-darwin-x64.zip"
+      sha256 "80520d7e17526308c9185d261679ac6d27798d3803a0e9f7ff9121ab8affb012"
+    end
+  end
 
   resource "whisper-source" do
     url "https://github.com/ggml-org/whisper.cpp/archive/927cfce34f31707e17f2bff35c349632fb9e2c3a.tar.gz"
     sha256 "41b664fee09e79176ac277b5237debec34f8d74af3c7d71f333f1ec67989ecde"
+  end
+
+  resource "bun-license" do
+    url "https://raw.githubusercontent.com/oven-sh/bun/bun-v1.4.2/LICENSE.md"
+    sha256 "b9caf52728691b4057e371232c221a132883198be2f3d2ddf92c90404c984b1a"
   end
 
   resource "whisper-model" do
@@ -28,6 +44,12 @@ class Seashell < Formula
   end
 
   def install
+    resource("bun-runtime").stage do
+      (libexec/"runtime/bin").install "bun"
+    end
+    resource("bun-license").stage do
+      (pkgshare/"licenses/bun").install "LICENSE.md"
+    end
     resource("whisper-source").stage(buildpath/"whisper.cpp")
     system "cmake", "-S", "whisper.cpp", "-B", "whisper.cpp/build", *std_cmake_args,
            "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=ON",
@@ -36,7 +58,7 @@ class Seashell < Formula
            "--target", "whisper-cli", "whisper-server"
     system "bash", "scripts/build-native.sh"
     ENV["BUN_INSTALL_CACHE_DIR"] = buildpath/"bun-cache"
-    system formula_opt_bin("oven-sh/bun/bun")/"bun", "install", "--frozen-lockfile", "--production"
+    system libexec/"runtime/bin/bun", "install", "--frozen-lockfile", "--production"
 
     libexec.install "src", "scripts", "seashell", "package.json", "bun.lock", "node_modules"
     (libexec/"native").install "native/bin"
@@ -50,7 +72,7 @@ class Seashell < Formula
       (libexec/"whisper.cpp/models").install "ggml-silero-v6.2.0.bin"
     end
 
-    runtime_path = %w[oven-sh/bun/bun ffmpeg sox].map { |name| formula_opt_bin(name) }.join(":")
+    runtime_path = [opt_libexec/"runtime/bin", *%w[ffmpeg sox].map { |name| formula_opt_bin(name) }].join(":")
     (bin/"seashell").write_env_script libexec/"seashell",
       PATH:                  "#{runtime_path}:$PATH",
       SEASHELL_MANAGED_BY:   "homebrew",
