@@ -34,6 +34,16 @@ class Seashell < Formula
     sha256 "b9caf52728691b4057e371232c221a132883198be2f3d2ddf92c90404c984b1a"
   end
 
+  resource "whisper-model-license" do
+    url "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/LICENSE"
+    sha256 "b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d"
+  end
+
+  resource "vad-model-license" do
+    url "https://raw.githubusercontent.com/snakers4/silero-vad/v6.2/LICENSE"
+    sha256 "2e63e9a38b6e8fc0c7bc37ce174caca1862870856c6daf5697cfb785e925520b"
+  end
+
   resource "whisper-model" do
     url "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin"
     sha256 "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"
@@ -61,6 +71,13 @@ class Seashell < Formula
       (pkgshare/"licenses/bun").install "LICENSE.md"
     end
     resource("whisper-source").stage(buildpath/"whisper.cpp")
+    (pkgshare/"licenses/whisper.cpp").install "whisper.cpp/LICENSE"
+    resource("whisper-model-license").stage do
+      (pkgshare/"licenses/whisper-model").install "LICENSE"
+    end
+    resource("vad-model-license").stage do
+      (pkgshare/"licenses/silero-vad").install "LICENSE"
+    end
     system "cmake", "-S", "whisper.cpp", "-B", "whisper.cpp/build", *std_cmake_args,
            "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=#{metal}",
            "-DGGML_METAL_EMBED_LIBRARY=ON", *cpu_args
