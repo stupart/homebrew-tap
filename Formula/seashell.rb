@@ -3,8 +3,8 @@ class Seashell < Formula
   homepage "https://github.com/stupart/seashell"
   url "https://github.com/stupart/seashell/archive/53ad140cc1f5e6a1eec554d9e27c0fc6bb25f551.tar.gz"
   version "1.1.0-rc2"
-  revision 1
   sha256 "547c1da67d498b610d44b06053604afa625684ce860c4fae2e6a367e0e14d92d"
+  revision 1
   # Upstream has not selected a license yet; do not invent one in the tap.
 
   depends_on "cmake" => :build
@@ -45,10 +45,13 @@ class Seashell < Formula
   end
 
   def install
-    # This source-only formula builds on the user's Mac. Preserve native CPU
-    # flags; disabling them under SOURCE_DATE_EPOCH disables Intel SIMD too.
-    # Bottles would need portable CPU variants instead of -march=native.
-    ENV.runtime_cpu_detection
+    # Homebrew's SOURCE_DATE_EPOCH disables ggml's default Intel SIMD flags.
+    # Match the Haswell baseline already required by the bundled x64 Bun.
+    cpu_args = if Hardware::CPU.intel?
+      %w[SSE42 AVX AVX2 BMI2 FMA F16C].map { |feature| "-DGGML_#{feature}=ON" }
+    else
+      []
+    end
     resource("bun-runtime").stage do
       (libexec/"runtime/bin").install "bun"
     end
@@ -57,8 +60,8 @@ class Seashell < Formula
     end
     resource("whisper-source").stage(buildpath/"whisper.cpp")
     system "cmake", "-S", "whisper.cpp", "-B", "whisper.cpp/build", *std_cmake_args,
-           "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=ON", "-DGGML_METAL=ON",
-           "-DGGML_METAL_EMBED_LIBRARY=ON"
+           "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=ON",
+           "-DGGML_METAL_EMBED_LIBRARY=ON", *cpu_args
     system "cmake", "--build", "whisper.cpp/build", "--parallel", ENV.make_jobs,
            "--target", "whisper-cli", "whisper-server"
     system "bash", "scripts/build-native.sh"
