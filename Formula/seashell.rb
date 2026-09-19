@@ -40,7 +40,7 @@ class Seashell < Formula
   end
 
   resource "vad-model-license" do
-    url "https://raw.githubusercontent.com/snakers4/silero-vad/v6.2/LICENSE"
+    url "https://raw.githubusercontent.com/snakers4/silero-vad/be95df9152c0d7618fa1edfeb296fc3dae32376f/LICENSE"
     sha256 "2e63e9a38b6e8fc0c7bc37ce174caca1862870856c6daf5697cfb785e925520b"
   end
 
