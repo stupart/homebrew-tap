@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/924c9373f168431cdd33bcb67f52089875ad53c2.tar.gz"
-  version "1.1.0-rc1"
-  sha256 "1b06fb41a20805f3c1655becb550fb3a5b67695ef86a15ef249c3d88c2ad2422"
+  url "https://github.com/stupart/seashell/archive/53ad140cc1f5e6a1eec554d9e27c0fc6bb25f551.tar.gz"
+  version "1.1.0-rc2"
+  sha256 "547c1da67d498b610d44b06053604afa625684ce860c4fae2e6a367e0e14d92d"
   # Upstream has not selected a license yet; do not invent one in the tap.
 
   depends_on "cmake" => :build
