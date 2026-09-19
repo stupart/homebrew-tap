@@ -19,12 +19,18 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
+      # Full-model inference on hosted Intel CPUs can exceed brew's 5-minute
+      # default. Keep an explicit bound; this does not skip the ASR assertions.
+      HOMEBREW_TEST_TIMEOUT_SECS: '600'
     steps:
       - uses: actions/checkout@v4
       - name: Register this exact formula checkout
         run: brew tap stupart/seashell-ci "$GITHUB_WORKSPACE"
       - name: Build and install from public source and model URLs
         run: brew install --build-from-source stupart/seashell-ci/seashell
+      - name: Record first-launch diagnostics outside the formula sandbox
+        timeout-minutes: 3
+        run: /usr/bin/time -p seashell doctor --json
       - name: Test setup, diagnostics, and real local transcription
         run: brew test stupart/seashell-ci/seashell
       - name: Inspect linked libraries
