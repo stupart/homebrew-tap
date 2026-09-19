@@ -1,0 +1,34 @@
+name: Seashell fresh installation
+on:
+  pull_request:
+    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
+  push:
+    branches: [trunk]
+    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Register this exact formula checkout
+        run: brew tap stupart/seashell-ci "$GITHUB_WORKSPACE"
+      - name: Build and install from public source and model URLs
+        run: brew install --build-from-source stupart/seashell-ci/seashell
+      - name: Test setup, diagnostics, and real local transcription
+        run: brew test stupart/seashell-ci/seashell
+      - name: Inspect linked libraries
+        run: brew linkage --test stupart/seashell-ci/seashell
+      - name: Preserve build and test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seashell-homebrew-${{ github.run_id }}
+          path: ~/Library/Logs/Homebrew/seashell/
+          retention-days: 14

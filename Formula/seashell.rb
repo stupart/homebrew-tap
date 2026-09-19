@@ -8,9 +8,9 @@ class Seashell < Formula
 
   depends_on "cmake" => :build
   depends_on "ffmpeg"
+  depends_on macos: :sonoma
   depends_on "oven-sh/bun/bun"
   depends_on "sox"
-  depends_on macos: :sonoma
 
   resource "whisper-source" do
     url "https://github.com/ggml-org/whisper.cpp/archive/927cfce34f31707e17f2bff35c349632fb9e2c3a.tar.gz"
@@ -36,7 +36,7 @@ class Seashell < Formula
            "--target", "whisper-cli", "whisper-server"
     system "bash", "scripts/build-native.sh"
     ENV["BUN_INSTALL_CACHE_DIR"] = buildpath/"bun-cache"
-    system Formula["oven-sh/bun/bun"].opt_bin/"bun", "install", "--frozen-lockfile", "--production"
+    system formula_opt_bin("oven-sh/bun/bun")/"bun", "install", "--frozen-lockfile", "--production"
 
     libexec.install "src", "scripts", "seashell", "package.json", "bun.lock", "node_modules"
     (libexec/"native").install "native/bin"
@@ -49,10 +49,10 @@ class Seashell < Formula
       (libexec/"whisper.cpp/models").install "ggml-silero-v6.2.0.bin"
     end
 
-    runtime_path = %w[oven-sh/bun/bun ffmpeg sox].map { |name| Formula[name].opt_bin }.join(":")
+    runtime_path = %w[oven-sh/bun/bun ffmpeg sox].map { |name| formula_opt_bin(name) }.join(":")
     (bin/"seashell").write_env_script libexec/"seashell",
-      PATH: "#{runtime_path}:$PATH",
-      SEASHELL_MANAGED_BY: "homebrew",
+      PATH:                  "#{runtime_path}:$PATH",
+      SEASHELL_MANAGED_BY:   "homebrew",
       SEASHELL_PACKAGE_ROOT: opt_libexec
   end
 
@@ -86,8 +86,9 @@ class Seashell < Formula
     assert_equal config, (testpath/"config.json").read
     assert JSON.parse(shell_output("#{bin}/seashell doctor --json")).fetch("ok")
 
-    system "/usr/bin/say", "-o", testpath/"speech.aiff",
-           "The project meeting is on Tuesday. Alice will prepare the release notes. Bob will test the audio recorder."
+    speech = "The project meeting is on Tuesday. Alice will prepare the release notes. " \
+             "Bob will test the audio recorder."
+    system "/usr/bin/say", "-o", testpath/"speech.aiff", speech
     record = JSON.parse(shell_output("#{bin}/seashell transcribe #{testpath}/speech.aiff --format json --quiet"))
     text = record.fetch("transcript").map { |segment| segment.fetch("text") }.join(" ").downcase
     %w[tuesday alice release bob audio].each { |word| assert_includes text, word }
