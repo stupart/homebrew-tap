@@ -98,6 +98,8 @@ class Seashell < Formula
   end
 
   test do
+    # Exercise the wrapper without any preinstalled Bun or Homebrew PATH.
+    ENV["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
     ENV["SEASHELL_CONFIG"] = testpath/"config.json"
     ENV["SEASHELL_LIBRARY_DIR"] = testpath/"library"
     assert_match "Sea Shell", shell_output("#{bin}/seashell --help")
