@@ -42,6 +42,7 @@ class Seashell < Formula
     (libexec/"native").install "native/bin"
     (libexec/"whisper.cpp/build/bin").install "whisper.cpp/build/bin/whisper-cli",
                                             "whisper.cpp/build/bin/whisper-server"
+    pkgshare.install "whisper.cpp/samples/jfk.wav"
     resource("whisper-model").stage do
       (libexec/"models").install "ggml-large-v3-turbo-q5_0.bin"
     end
@@ -86,12 +87,13 @@ class Seashell < Formula
     assert_equal config, (testpath/"config.json").read
     assert JSON.parse(shell_output("#{bin}/seashell doctor --json")).fetch("ok")
 
-    speech = "The project meeting is on Tuesday. Alice will prepare the release notes. " \
-             "Bob will test the audio recorder."
-    system "/usr/bin/say", "-o", testpath/"speech.aiff", speech
-    record = JSON.parse(shell_output("#{bin}/seashell transcribe #{testpath}/speech.aiff --format json --quiet"))
+    # macOS say can return empty audio in a clean, headless test account.
+    # This fixture is part of the checksum-pinned Whisper source archive.
+    cp pkgshare/"jfk.wav", testpath/"speech.wav"
+    record = JSON.parse(shell_output("#{bin}/seashell transcribe #{testpath}/speech.wav --format json --quiet"))
     text = record.fetch("transcript").map { |segment| segment.fetch("text") }.join(" ").downcase
-    %w[tuesday alice release bob audio].each { |word| assert_includes text, word }
+    assert_includes text, "ask not what your country"
+    assert_includes text, "what you can do for your country"
     assert_match "brew upgrade stupart/tap/seashell", shell_output("#{bin}/seashell update 2>&1", 1)
   end
 end
