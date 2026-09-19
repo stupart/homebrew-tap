@@ -52,6 +52,8 @@ class Seashell < Formula
     else
       []
     end
+    # Upstream Homebrew ggml also limits Metal to Apple Silicon.
+    metal = Hardware::CPU.arm? ? "ON" : "OFF"
     resource("bun-runtime").stage do
       (libexec/"runtime/bin").install "bun"
     end
@@ -60,7 +62,7 @@ class Seashell < Formula
     end
     resource("whisper-source").stage(buildpath/"whisper.cpp")
     system "cmake", "-S", "whisper.cpp", "-B", "whisper.cpp/build", *std_cmake_args,
-           "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=ON",
+           "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=#{metal}",
            "-DGGML_METAL_EMBED_LIBRARY=ON", *cpu_args
     system "cmake", "--build", "whisper.cpp/build", "--parallel", ENV.make_jobs,
            "--target", "whisper-cli", "whisper-server"
