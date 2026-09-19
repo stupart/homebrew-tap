@@ -1,11 +1,10 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/53ad140cc1f5e6a1eec554d9e27c0fc6bb25f551.tar.gz"
-  version "1.1.0-rc2"
-  sha256 "547c1da67d498b610d44b06053604afa625684ce860c4fae2e6a367e0e14d92d"
-  revision 1
-  # Upstream has not selected a license yet; do not invent one in the tap.
+  url "https://github.com/stupart/seashell/archive/efd178d9ee105518611622d277538f97031f6f43.tar.gz"
+  version "1.1.0-rc3"
+  sha256 "c522988c31352d1089575c6d2b9cf54e0f40826f0157a2b301f87ce6eac44e22"
+  license "MIT"
 
   depends_on "cmake" => :build
   depends_on "ffmpeg"
@@ -55,6 +54,7 @@ class Seashell < Formula
   end
 
   def install
+    (pkgshare/"licenses/seashell").install "LICENSE"
     # Homebrew's SOURCE_DATE_EPOCH disables ggml's default Intel SIMD flags.
     # Match the Haswell baseline already required by the bundled x64 Bun.
     cpu_args = if Hardware::CPU.intel?
