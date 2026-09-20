@@ -1,0 +1,59 @@
+name: Seashell fresh installation
+on:
+  pull_request:
+    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
+  push:
+    branches: [trunk]
+    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
+      # Full-model inference on hosted Intel CPUs can exceed brew's 5-minute
+      # default. Keep an explicit bound; this does not skip the ASR assertions.
+      HOMEBREW_TEST_TIMEOUT_SECS: '600'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Register this exact formula checkout
+        run: brew tap stupart/seashell-ci "$GITHUB_WORKSPACE"
+      - name: Build and install from public source and model URLs
+        run: brew install --build-from-source stupart/seashell-ci/seashell
+      - name: Record first-launch diagnostics outside the formula sandbox
+        timeout-minutes: 3
+        run: /usr/bin/time -p seashell doctor --json
+      - name: Test setup, diagnostics, and real local transcription
+        run: |
+          brew test stupart/seashell-ci/seashell &
+          seashell_test_pid=$!
+          seashell_test_round=0
+          while kill -0 "$seashell_test_pid" 2>/dev/null; do
+            ps -axo pid,ppid,etime,time,pcpu,rss,command | awk '/[w]hisper-cli|[b]un run/'
+            if [ "$seashell_test_round" -eq 4 ]; then
+              seashell_whisper_pid="$(pgrep -x whisper-cli | head -1 || true)"
+              if [ -n "$seashell_whisper_pid" ]; then
+                sample "$seashell_whisper_pid" 1 -file "$HOME/Library/Logs/Homebrew/seashell/whisper-sample.txt" || true
+              fi
+            fi
+            seashell_test_round=$((seashell_test_round + 1))
+            sleep 30
+          done
+          wait "$seashell_test_pid"
+      - name: Inspect linked libraries
+        run: brew linkage --test stupart/seashell-ci/seashell
+      - name: Preserve build and test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seashell-homebrew-${{ matrix.os }}-${{ github.run_id }}
+          path: ~/Library/Logs/Homebrew/seashell/
+          retention-days: 14
