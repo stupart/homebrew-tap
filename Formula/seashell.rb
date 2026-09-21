@@ -1,15 +1,16 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/b8e812c4213f51cb2953d750646b22326efab3d3.tar.gz"
-  version "1.1.0-rc6"
-  sha256 "98472d2c43d3d1e1f60e85691df37044dd90145293cb2181937e98247a1f5778"
+  url "https://github.com/stupart/seashell/archive/2d5fdf58b1b39f14dfe7d1ac4a8cdd91dc46d260.tar.gz"
+  version "1.1.0-rc7"
+  sha256 "bf9a23528dd40678f0feba056a997618abec2f23448b8a61f262021bb20661cf"
   license "MIT"
 
   depends_on "cmake" => :build
   depends_on "ffmpeg"
   depends_on macos: :sonoma
   depends_on "sox"
+  depends_on "node"
 
   # Bundle the runtime privately so a fresh install needs no additional tap.
   resource "bun-runtime" do
@@ -99,7 +100,7 @@ class Seashell < Formula
       (libexec/"whisper.cpp/models").install "ggml-silero-v6.2.0.bin"
     end
 
-    runtime_path = [opt_libexec/"runtime/bin", *%w[ffmpeg sox].map { |name| formula_opt_bin(name) }].join(":")
+    runtime_path = [opt_libexec/"runtime/bin", *%w[ffmpeg sox node].map { |name| formula_opt_bin(name) }].join(":")
     (bin/"seashell").write_env_script libexec/"seashell",
       PATH:                  "#{runtime_path}:$PATH",
       SEASHELL_MANAGED_BY:   "homebrew",
@@ -121,6 +122,10 @@ class Seashell < Formula
 
       This is the tested 1.1.0 release candidate, pinned to its reviewed source.
       Speaker diarization and Humain meeting intelligence are optional additions.
+      Install a trusted private Humain package with:
+        seashell ai install /path/to/humain-engine-0.0.1.tgz
+      Discover configured AI providers with:
+        seashell ai providers
     EOS
   end
 
@@ -128,8 +133,13 @@ class Seashell < Formula
     # Exercise the wrapper without any preinstalled Bun or Homebrew PATH.
     ENV["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
     ENV["SEASHELL_CONFIG"] = testpath/"config.json"
+    ENV["SEASHELL_HUMAIN_DIR"] = testpath/"intelligence"
+    ENV["HUMAIN_CLI"] = ""
     ENV["SEASHELL_LIBRARY_DIR"] = testpath/"library"
     assert_match "Sea Shell", shell_output("#{bin}/seashell --help")
+    intelligence = JSON.parse(shell_output("#{bin}/seashell ai status --json", 1))
+    assert_equal false, intelligence.fetch("ready")
+    assert_includes intelligence.fetch("help"), "seashell ai install"
     manifest = JSON.parse(shell_output("#{bin}/seashell capabilities --json"))
     assert_equal "product.seashell", manifest.fetch("product").fetch("id")
     system bin/"seashell", "setup", "--no-autostart"
