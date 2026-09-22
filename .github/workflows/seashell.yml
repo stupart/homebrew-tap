@@ -15,13 +15,14 @@ jobs:
       matrix:
         os: [macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
-      # Full-model inference on hosted Intel CPUs can exceed brew's 5-minute
-      # default. Keep an explicit bound; this does not skip the ASR assertions.
-      HOMEBREW_TEST_TIMEOUT_SECS: '600'
+      # RC7's unchanged ASR path took 9m37s on hosted Intel, too near the old
+      # 10-minute cap. Keep the full model and both transcript assertions, with
+      # 15-minute Intel headroom for runner variance (10 minutes on ARM).
+      HOMEBREW_TEST_TIMEOUT_SECS: ${{ matrix.os == 'macos-15-intel' && '900' || '600' }}
     steps:
       - uses: actions/checkout@v4
       - name: Register this exact formula checkout

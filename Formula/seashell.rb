@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/2d5fdf58b1b39f14dfe7d1ac4a8cdd91dc46d260.tar.gz"
-  version "1.1.0-rc7"
-  sha256 "bf9a23528dd40678f0feba056a997618abec2f23448b8a61f262021bb20661cf"
+  url "https://github.com/stupart/seashell/archive/deec7d9f9da5231f433dddd5a4e3bd1823cd1144.tar.gz"
+  version "1.1.0-rc8"
+  sha256 "0607c371983d96bf9b0f8b9305b06c7939a75dd6a30993e201af51db7f320192"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -124,8 +124,8 @@ class Seashell < Formula
       Speaker diarization and Humain meeting intelligence are optional additions.
       Install a trusted private Humain package with:
         seashell ai install /path/to/humain-engine-0.0.1.tgz
-      Discover configured AI providers with:
-        seashell ai providers
+      Choose meeting AI interactively (or press P in the app):
+        seashell ai setup
     EOS
   end
 
@@ -137,6 +137,7 @@ class Seashell < Formula
     ENV["HUMAIN_CLI"] = ""
     ENV["SEASHELL_LIBRARY_DIR"] = testpath/"library"
     assert_match "Sea Shell", shell_output("#{bin}/seashell --help")
+    assert_match "seashell ai setup", shell_output("#{bin}/seashell --help")
     intelligence = JSON.parse(shell_output("#{bin}/seashell ai status --json", 1))
     assert_equal false, intelligence.fetch("ready")
     assert_includes intelligence.fetch("help"), "seashell ai install"
