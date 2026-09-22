@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/deec7d9f9da5231f433dddd5a4e3bd1823cd1144.tar.gz"
-  version "1.1.0-rc8"
-  sha256 "0607c371983d96bf9b0f8b9305b06c7939a75dd6a30993e201af51db7f320192"
+  url "https://github.com/stupart/seashell/archive/6e356a2611ae34a2ee45e4b1b7cef24cfefc8841.tar.gz"
+  version "1.1.0-rc9"
+  sha256 "fc65a1f1b01b8aba46bfc5fee37b5ab36a5690ec48ee54dcace160d67bcc708c"
   license "MIT"
 
   depends_on "cmake" => :build

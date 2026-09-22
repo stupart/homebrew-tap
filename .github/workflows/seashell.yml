@@ -1,10 +1,6 @@
 name: Seashell fresh installation
 on:
-  pull_request:
-    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
-  push:
-    branches: [trunk]
-    paths: ['Formula/seashell.rb', '.github/workflows/seashell.yml']
+  # Prefer local source installation + brew test. Hosted runners are opt-in only.
   workflow_dispatch:
 permissions:
   contents: read
