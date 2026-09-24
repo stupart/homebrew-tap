@@ -1,16 +1,16 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/872524b324047199e2fa40bdb92a39f4c2a803c8.tar.gz"
-  version "1.1.0-rc11"
-  sha256 "27614f1add111b3a0e1e455d55067031846e7d9e7eaa9836d5f1b44d8050b33d"
+  url "https://github.com/stupart/seashell/archive/0d394972b27406d10935e177deadf900fcade50c.tar.gz"
+  version "1.1.0-rc12"
+  sha256 "229f692b785e91c77de585e5ac41837252a6381e2c2f015b608f3db886388ed0"
   license "MIT"
 
   depends_on "cmake" => :build
   depends_on "ffmpeg"
   depends_on macos: :sonoma
-  depends_on "sox"
   depends_on "node"
+  depends_on "sox"
 
   # Bundle the runtime privately so a fresh install needs no additional tap.
   resource "bun-runtime" do
@@ -122,7 +122,10 @@ class Seashell < Formula
 
       This is the tested 1.1.0 release candidate, pinned to its reviewed source.
       Speaker diarization and Humain meeting intelligence are optional additions.
-      Press V for local speaker setup, or run:
+      Press V to connect Google Meet names (Chrome/Safari) or set up local voices.
+      Check Meet browser permission with:
+        seashell meeting speakers chrome
+      For optional local voice separation, run:
         seashell setup --speakers --login
       Install a trusted private Humain package with:
         seashell ai install /path/to/humain-engine-0.0.1.tgz
@@ -144,12 +147,17 @@ class Seashell < Formula
     ENV["SEASHELL_LIBRARY_DIR"] = testpath/"library"
     assert_match "Sea Shell", shell_output("#{bin}/seashell --help")
     assert_match "seashell ai setup", shell_output("#{bin}/seashell --help")
+    assert_match "meeting speakers", shell_output("#{bin}/seashell --help")
+    meet = JSON.parse(shell_output("#{bin}/seashell meeting speakers check --json"))
+    assert_equal "off", meet.fetch("state")
     intelligence = JSON.parse(shell_output("#{bin}/seashell ai status --json", 1))
     assert_equal false, intelligence.fetch("ready")
     assert_includes intelligence.fetch("help"), "seashell ai install"
     manifest = JSON.parse(shell_output("#{bin}/seashell capabilities --json"))
     assert_equal "product.seashell", manifest.fetch("product").fetch("id")
-    speakers = manifest.fetch("capabilities").first.fetch("optionalFeatures").find { |feature| feature.fetch("id") == "speaker-diarization" }
+    speakers = manifest.fetch("capabilities").first.fetch("optionalFeatures").find do |feature|
+      feature.fetch("id") == "speaker-diarization"
+    end
     assert_equal false, speakers.fetch("ready")
     assert_includes speakers.fetch("nextStep"), "seashell setup --speakers"
     system bin/"seashell", "setup", "--no-autostart"
