@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/0d394972b27406d10935e177deadf900fcade50c.tar.gz"
-  version "1.1.0-rc12"
-  sha256 "229f692b785e91c77de585e5ac41837252a6381e2c2f015b608f3db886388ed0"
+  url "https://github.com/stupart/seashell/archive/79cd15d9068e45b806a9ed5e0bdef4d40cdb14f4.tar.gz"
+  version "1.1.0-rc13"
+  sha256 "a0958c10a496fd9b9537b5b628675cede9ecf0910edac66060ba8e32da98e83c"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -122,9 +122,9 @@ class Seashell < Formula
 
       This is the tested 1.1.0 release candidate, pinned to its reviewed source.
       Speaker diarization and Humain meeting intelligence are optional additions.
-      Press V to connect Google Meet names (Chrome/Safari) or set up local voices.
+      Press V to connect Google Meet names automatically in Chrome and Safari.
       Check Meet browser permission with:
-        seashell meeting speakers chrome
+        seashell meeting speakers auto
       For optional local voice separation, run:
         seashell setup --speakers --login
       Install a trusted private Humain package with:
