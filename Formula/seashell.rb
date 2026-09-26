@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/25407a55e379cd9ba6b4101ea53ffc0904177b54.tar.gz"
-  version "1.1.0-rc14"
-  sha256 "df89cccf6c5e37730cd9a16d454f3f439d50ad0473a8eda3ea4b9194fe09509f"
+  url "https://github.com/stupart/seashell/archive/c6aa3466eb0aecc6663f461f7db7cbe7c8546831.tar.gz"
+  version "1.1.0-rc15"
+  sha256 "be35597952c422249a84680f968a961def3dc2395d7310af29a7e29a76aeb7eb"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -122,9 +122,15 @@ class Seashell < Formula
 
       This is the tested 1.1.0 release candidate, pinned to its reviewed source.
       Speaker diarization and Humain meeting intelligence are optional additions.
-      Press V to connect Google Meet names automatically in Chrome and Safari.
-      Check Meet browser permission with:
-        seashell meeting speakers auto
+      Press V for experimental Google Meet speaker names in Chrome.
+      Set up macOS Accessibility for this window and background meetings:
+        seashell meeting speakers setup
+      Allow the entries macOS shows, then verify both permission scopes:
+        seashell meeting speakers check
+      Terminal permission alone does not enable background meeting detection.
+      No browser extension or developer setting is required.
+      While your Meet mic is unmuted, keep its People/Participants panel open.
+      Safari speaker names are not yet verified.
       For optional local voice separation, run:
         seashell setup --speakers --login
       Install a trusted private Humain package with:
@@ -147,9 +153,40 @@ class Seashell < Formula
     ENV["SEASHELL_LIBRARY_DIR"] = testpath/"library"
     assert_match "Sea Shell", shell_output("#{bin}/seashell --help")
     assert_match "seashell ai setup", shell_output("#{bin}/seashell --help")
-    assert_match "meeting speakers", shell_output("#{bin}/seashell --help")
+    assert_match "meeting speakers setup", shell_output("#{bin}/seashell --help")
     meet = JSON.parse(shell_output("#{bin}/seashell meeting speakers check --json"))
     assert_equal "off", meet.fetch("state")
+
+    # Replay sanitized AX evidence without opening a browser or asking for permission.
+    accessibility_helper = libexec/"native/bin/seashell-meeting-accessibility"
+    assert_predicate accessibility_helper, :executable?
+    (testpath/"meet-accessibility.json").write <<~JSON
+      {
+        "browsers": [{
+          "browser": "chrome",
+          "running": true,
+          "root": {"role": "AXApplication", "children": [{
+            "role": "AXWindow", "children": [{
+              "role": "AXWebArea",
+              "url": "https://meet.google.com/abc-defg-hij",
+              "children": [
+                {"role": "AXButton", "description": "Leave call"},
+                {"role": "AXButton", "description": "Turn on microphone"}
+              ]
+            }]
+          }]}
+        }]
+      }
+    JSON
+    evidence = JSON.parse(shell_output("#{accessibility_helper} --fixture #{testpath}/meet-accessibility.json"))
+    assert_equal "accessibility", evidence.fetch("transport")
+    assert_equal "connected", evidence.fetch("state")
+    assert_equal "chrome", evidence.fetch("browser")
+    assert_equal true, evidence.fetch("snapshot").fetch("joined")
+    assert_equal "/abc-defg-hij", evidence.fetch("snapshot").fetch("meeting")
+    assert_empty evidence.fetch("snapshot").fetch("participants")
+    refute evidence.key?("accessibilityTrusted")
+
     intelligence = JSON.parse(shell_output("#{bin}/seashell ai status --json", 1))
     assert_equal false, intelligence.fetch("ready")
     assert_includes intelligence.fetch("help"), "seashell ai install"
