@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/c58580fb95edf57b514dcc640c8a362202fca2f9.tar.gz"
-  version "1.1.0-rc16"
-  sha256 "d804c4a43b8442702aafc700116e020c8f96b4097a06ee99078e1072378b17d7"
+  url "https://github.com/stupart/seashell/archive/78927a975a925c1105ed3357924c7dd12a758d1d.tar.gz"
+  version "1.1.0-rc17"
+  sha256 "439b950be6e25bb43c86ab282cb0aa5d4d69f2b6eec29013d8759aff17ed979f"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -131,7 +131,8 @@ class Seashell < Formula
       Upgrading an older watcher? Finish recording, then run:
         seashell meeting autostart enable
         seashell meeting speakers setup
-      The stable background runtime may appear as bun in Accessibility settings.
+      The permanent permission host is named Seashell Background.
+      Background meetings now show live text and microphone/computer audio health.
       No browser extension or developer setting is required.
       While your Meet mic is unmuted, keep its People/Participants panel open.
       Safari speaker names are not yet verified.
@@ -223,6 +224,43 @@ class Seashell < Formula
     assert_operator segments.first.fetch("start"), :>=, 3.0
     assert_in_delta duration, segments.last.fetch("end"), 2.0,
                     "The final words must stay on the original audio timeline after leading silence"
+    # Exercise the installed background draft worker with committed fixture audio.
+    # No microphone, browser, permissions, generated voice or cloud account needed.
+    (testpath/"live-draft-smoke.ts").write <<~JS
+      import assert from 'node:assert/strict';
+      import { readFileSync } from 'node:fs';
+      import { basename } from 'node:path';
+      import { CaptureSessionStore } from '#{libexec}/src/capture-session.ts';
+      import { startBackgroundLiveTranscript } from '#{libexec}/src/background-live-transcript.ts';
+      import { createTranscriptRecord } from '#{libexec}/src/transcript-record.ts';
+      import { findTranscriptRecord, saveTranscriptRecord } from '#{libexec}/src/transcript-library.ts';
+      import { meetingRuntimeHostPath } from '#{libexec}/src/runtime-host.ts';
+      assert.equal(basename(meetingRuntimeHostPath()), 'Seashell Background');
+      const library = '#{testpath}/live-library';
+      const record = createTranscriptRecord({ transcript: [], speakers: [] }, { id: 'package-live-smoke' });
+      saveTranscriptRecord(library, record);
+      const store = new CaptureSessionStore({ libraryDir: library, sessionId: record.id, startedAtUnixMs: Date.now() });
+      const chunk = await store.commitChunkAsync({ sourcePath: '#{testpath}/speech.wav', trackId: 'microphone',
+        startSeconds: 0, endSeconds: #{duration}, audible: true });
+      const original = readFileSync(chunk.path);
+      const worker = startBackgroundLiveTranscript({ libraryDir: library, record, publishIntervalMs: 100 });
+      try {
+        worker.enqueue(chunk);
+        const deadline = Date.now() + 45000;
+        while (!findTranscriptRecord(library, record.id).record.transcript.length && Date.now() < deadline) {
+          if (worker.status.stage === 'delayed') throw new Error(worker.status.detail);
+          await Bun.sleep(50);
+        }
+        const live = findTranscriptRecord(library, record.id).record;
+        const text = live.transcript.map(segment => segment.text).join(' ').toLowerCase();
+        assert.ok(text.includes('what you can do for your country'), text);
+        assert.notEqual(worker.status.stage, 'stopped');
+        assert.deepEqual(readFileSync(chunk.path), original);
+        console.log('PASS: installed worker saved live text before close');
+      } finally { await worker.close(); }
+    JS
+    assert_match "PASS: installed worker saved live text before close",
+                 shell_output("#{libexec}/runtime/bin/bun #{testpath}/live-draft-smoke.ts")
     assert_match "brew upgrade stupart/tap/seashell", shell_output("#{bin}/seashell update 2>&1", 1)
   end
 end
