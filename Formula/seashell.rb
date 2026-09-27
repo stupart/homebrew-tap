@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/c6aa3466eb0aecc6663f461f7db7cbe7c8546831.tar.gz"
-  version "1.1.0-rc15"
-  sha256 "be35597952c422249a84680f968a961def3dc2395d7310af29a7e29a76aeb7eb"
+  url "https://github.com/stupart/seashell/archive/c58580fb95edf57b514dcc640c8a362202fca2f9.tar.gz"
+  version "1.1.0-rc16"
+  sha256 "d804c4a43b8442702aafc700116e020c8f96b4097a06ee99078e1072378b17d7"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -205,11 +205,20 @@ class Seashell < Formula
 
     # macOS say can return empty audio in a clean, headless test account.
     # This fixture is part of the checksum-pinned Whisper source archive.
-    cp pkgshare/"jfk.wav", testpath/"speech.wav"
+    # Lead-in silence catches VAD-compressed token timestamps without another ASR run.
+    system formula_opt_bin("ffmpeg")/"ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error",
+           "-i", pkgshare/"jfk.wav", "-af", "adelay=4000:all=1", "-c:a", "pcm_s16le", testpath/"speech.wav"
+    duration_probe = "#{formula_opt_bin("ffmpeg")}/ffprobe -v error -show_entries format=duration -of json"
+    duration_data = JSON.parse(shell_output("#{duration_probe} #{testpath}/speech.wav"))
+    duration = duration_data.fetch("format").fetch("duration").to_f
     record = JSON.parse(shell_output("#{bin}/seashell transcribe #{testpath}/speech.wav --format json --quiet"))
-    text = record.fetch("transcript").map { |segment| segment.fetch("text") }.join(" ").downcase
+    segments = record.fetch("transcript")
+    text = segments.map { |segment| segment.fetch("text") }.join(" ").downcase
     assert_includes text, "ask not what your country"
     assert_includes text, "what you can do for your country"
+    assert_operator segments.first.fetch("start"), :>=, 3.0
+    assert_in_delta duration, segments.last.fetch("end"), 2.0,
+                    "The final words must stay on the original audio timeline after leading silence"
     assert_match "brew upgrade stupart/tap/seashell", shell_output("#{bin}/seashell update 2>&1", 1)
   end
 end
