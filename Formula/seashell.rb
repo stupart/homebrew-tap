@@ -128,6 +128,10 @@ class Seashell < Formula
       Allow the entries macOS shows, then verify both permission scopes:
         seashell meeting speakers check
       Terminal permission alone does not enable background meeting detection.
+      Upgrading an older watcher? Finish recording, then run:
+        seashell meeting autostart enable
+        seashell meeting speakers setup
+      The stable background runtime may appear as bun in Accessibility settings.
       No browser extension or developer setting is required.
       While your Meet mic is unmuted, keep its People/Participants panel open.
       Safari speaker names are not yet verified.
