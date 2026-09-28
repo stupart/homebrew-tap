@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/78927a975a925c1105ed3357924c7dd12a758d1d.tar.gz"
-  version "1.1.0-rc17"
-  sha256 "439b950be6e25bb43c86ab282cb0aa5d4d69f2b6eec29013d8759aff17ed979f"
+  url "https://github.com/stupart/seashell/archive/b98e1de09e1987672e1f0b085cd397d40fdf7216.tar.gz"
+  version "1.1.0-rc19"
+  sha256 "d06df496854fefeee76bf8874d54cf587c3ecc496acb9179614ce647570111c8"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -191,6 +191,17 @@ class Seashell < Formula
     assert_equal "/abc-defg-hij", evidence.fetch("snapshot").fetch("meeting")
     assert_empty evidence.fetch("snapshot").fetch("participants")
     refute evidence.key?("accessibilityTrusted")
+
+    # An unreadable other browser must not erase a positively joined call.
+    partial_fixture = JSON.parse((testpath/"meet-accessibility.json").read)
+    partial_fixture.fetch("browsers") << { "browser" => "safari", "running" => true }
+    (testpath/"meet-partial.json").write JSON.generate(partial_fixture)
+    partial = JSON.parse(shell_output("#{accessibility_helper} --fixture #{testpath}/meet-partial.json"))
+    assert_equal "unavailable", partial.fetch("state")
+    assert_equal "chrome", partial.fetch("browser")
+    assert_equal true, partial.fetch("snapshot").fetch("joined")
+    assert_empty partial.fetch("snapshot").fetch("participants")
+    refute partial["absenceConfirmed"]
 
     intelligence = JSON.parse(shell_output("#{bin}/seashell ai status --json", 1))
     assert_equal false, intelligence.fetch("ready")
