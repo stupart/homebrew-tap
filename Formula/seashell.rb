@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/b98e1de09e1987672e1f0b085cd397d40fdf7216.tar.gz"
-  version "1.1.0-rc19"
-  sha256 "d06df496854fefeee76bf8874d54cf587c3ecc496acb9179614ce647570111c8"
+  url "https://github.com/stupart/seashell/archive/b7484067fb4d4d881ce97bcd755c88ae9cefaf76.tar.gz"
+  version "1.1.0-rc20"
+  sha256 "3177a8d4f23f5d04165a07b90677682198830f669e7944759fa9c8903b30ef4d"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -111,9 +111,12 @@ class Seashell < Formula
     <<~EOS
       Open the app with:
         seashell
+      Press , in the app (or run `seashell status`) to see what works and fix the rest.
 
       Local models are included. No API key or separate setup is required.
-      macOS will ask for microphone/system-audio permission when first used.
+      Background meetings record your microphone through "Seashell Microphone".
+      Allow it once (macOS asks; choose Allow):
+        seashell meeting microphone setup
       To opt into the background meeting watcher at login:
         seashell setup
 
@@ -131,6 +134,8 @@ class Seashell < Formula
       Upgrading an older watcher? Finish recording, then run:
         seashell meeting autostart enable
         seashell meeting speakers setup
+      Meetings split into pieces by older versions can be joined:
+        seashell meeting merge --auto --dry-run
       The permanent permission host is named Seashell Background.
       Background meetings now show live text and microphone/computer audio health.
       No browser extension or developer setting is required.
@@ -165,6 +170,9 @@ class Seashell < Formula
     # Replay sanitized AX evidence without opening a browser or asking for permission.
     accessibility_helper = libexec/"native/bin/seashell-meeting-accessibility"
     assert_predicate accessibility_helper, :executable?
+    # Background microphone capture needs the self-responsible native recorder.
+    assert_predicate libexec/"native/bin/seashell-microphone", :executable?
+    assert_match "No split meetings found.", shell_output("#{bin}/seashell meeting merge --auto --dry-run")
     (testpath/"meet-accessibility.json").write <<~JSON
       {
         "browsers": [{
