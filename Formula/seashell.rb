@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/58b28376ef9b955b3a4017ba5bc2fba28483422d.tar.gz"
-  version "1.1.0-rc21"
-  sha256 "4eee015648b4aa197608f10b7373fff9bf664261638f9739f5c72edc6f6832af"
+  url "https://github.com/stupart/seashell/archive/bfdb1cffb9b2835a6833475cd5cb0eff82eaf223.tar.gz"
+  version "1.1.0-rc22"
+  sha256 "9449331ae19bdce4c3df115012eb6c6116b2a47fe64901a8ec1a540208975c25"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -117,6 +117,8 @@ class Seashell < Formula
       Background meetings record your microphone through "Seashell Microphone".
       Allow it once (macOS asks; choose Allow):
         seashell meeting microphone setup
+      Optional: name meetings after their calendar event (Seashell Calendar):
+        seashell meeting calendar setup
       To opt into the background meeting watcher at login:
         seashell setup
 
@@ -131,7 +133,8 @@ class Seashell < Formula
       Allow the entries macOS shows, then verify both permission scopes:
         seashell meeting speakers check
       Terminal permission alone does not enable background meeting detection.
-      Upgrading an older watcher? Finish recording, then run:
+      From rc22 the background watcher restarts itself after upgrades.
+      Upgrading from an older watcher? Finish recording, then run:
         seashell meeting autostart enable
         seashell meeting speakers setup
       Meetings split into pieces by older versions can be joined:
@@ -172,6 +175,7 @@ class Seashell < Formula
     assert_predicate accessibility_helper, :executable?
     # Background microphone capture needs the self-responsible native recorder.
     assert_predicate libexec/"native/bin/seashell-microphone", :executable?
+    assert_predicate libexec/"native/bin/seashell-calendar", :executable?
     assert_match "No split meetings found.", shell_output("#{bin}/seashell meeting merge --auto --dry-run")
     (testpath/"meet-accessibility.json").write <<~JSON
       {
