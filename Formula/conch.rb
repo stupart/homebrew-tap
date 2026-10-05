@@ -1,5 +1,5 @@
 class Conch < Formula
-  desc "Voice loop for Claude Code: hear your sessions speak, talk your prompts back"
+  desc "Agent manager for Claude Code and Codex: see their work, talk it through"
   homepage "https://github.com/stupart/conch"
   version "0.4.0"
   license "MIT"
