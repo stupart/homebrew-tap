@@ -1,7 +1,7 @@
 class Conch < Formula
   desc "Voice loop for Claude Code: hear your sessions speak, talk your prompts back"
   homepage "https://github.com/stupart/conch"
-  version "0.3.0"
+  version "0.4.0"
   license "MIT"
 
   depends_on "sox"          # microphone capture
@@ -10,13 +10,13 @@ class Conch < Formula
   depends_on :macos
 
   on_arm do
-    url "https://github.com/stupart/conch/releases/download/v0.3.0/conch-macos-arm64.tar.gz"
-    sha256 "3ac6ba2ea04dc986f896d831ffe44de99e410105795c2569b33a49368b16c5dd"
+    url "https://github.com/stupart/conch/releases/download/v0.4.0/conch-macos-arm64.tar.gz"
+    sha256 "42984b59d13263318cfe6407748944f37b8e0f0f2de34d8a3a364afb881ff701"
   end
 
   on_intel do
-    url "https://github.com/stupart/conch/releases/download/v0.3.0/conch-macos-x64.tar.gz"
-    sha256 "b4d52c4793fede38b42987a7ea82c46cb30ef63b640b289070b35b96c8839af6"
+    url "https://github.com/stupart/conch/releases/download/v0.4.0/conch-macos-x64.tar.gz"
+    sha256 "673bcb39964ca28154ef31e4d15acb2b53e9a3907d65ccff5a21e2348a958c4b"
   end
 
   def install
