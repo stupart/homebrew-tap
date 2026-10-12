@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/23cede4db518e6d878defcbc93384e24f0d27b36.tar.gz"
-  version "1.1.0-rc24"
-  sha256 "e086b16e74d5556726486aeeced6976bec3d515b0567446fa11bcacbc2bccfde"
+  url "https://github.com/stupart/seashell/archive/4042d88d1ceb480ec09246cb9bba5f8f5053615a.tar.gz"
+  version "1.1.0-rc25"
+  sha256 "8f71fe70e48811cfd00e86d192b4e7dc04da99b3df96f52edefadeef21b8f71e"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -88,7 +88,7 @@ class Seashell < Formula
     ENV["BUN_INSTALL_CACHE_DIR"] = buildpath/"bun-cache"
     system libexec/"runtime/bin/bun", "install", "--frozen-lockfile", "--production"
 
-    libexec.install "src", "scripts", "seashell", "package.json", "bun.lock", "node_modules"
+    libexec.install "src", "scripts", "skills", "seashell", "package.json", "bun.lock", "node_modules"
     (libexec/"native").install "native/bin"
     (libexec/"whisper.cpp/build/bin").install "whisper.cpp/build/bin/whisper-cli",
                                             "whisper.cpp/build/bin/whisper-server"
@@ -148,6 +148,8 @@ class Seashell < Formula
         seashell setup --speakers --login
       Install a trusted private Humain package with:
         seashell ai install /path/to/humain-engine-0.0.1.tgz
+      Use your meetings from Claude Code and Codex (read-only MCP server + skill):
+        seashell mcp install
       Choose meeting AI interactively (or press P in the app):
         seashell ai setup
     EOS
@@ -177,6 +179,10 @@ class Seashell < Formula
     assert_predicate libexec/"native/bin/seashell-microphone", :executable?
     assert_predicate libexec/"native/bin/seashell-calendar", :executable?
     assert_match "No split meetings found.", shell_output("#{bin}/seashell meeting merge --auto --dry-run")
+    # The meetings MCP server answers an initialize request over stdio.
+    init = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}'
+    assert_match '"name":"seashell"', pipe_output("#{bin}/seashell mcp", "#{init}\n")
+    assert_predicate libexec/"skills/seashell-meetings/SKILL.md", :exist?
     (testpath/"meet-accessibility.json").write <<~JSON
       {
         "browsers": [{
