@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/4042d88d1ceb480ec09246cb9bba5f8f5053615a.tar.gz"
-  version "1.1.0-rc25"
-  sha256 "8f71fe70e48811cfd00e86d192b4e7dc04da99b3df96f52edefadeef21b8f71e"
+  url "https://github.com/stupart/seashell/archive/7d01b48bf67a5fe900f5ed2f7b86ba6f71d1afac.tar.gz"
+  version "1.1.0-rc26"
+  sha256 "aed3608dbe9ee4f13abb2035c845fd6b26b802417e8efebc46d4a2e359ae33da"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -88,7 +88,7 @@ class Seashell < Formula
     ENV["BUN_INSTALL_CACHE_DIR"] = buildpath/"bun-cache"
     system libexec/"runtime/bin/bun", "install", "--frozen-lockfile", "--production"
 
-    libexec.install "src", "scripts", "skills", "seashell", "package.json", "bun.lock", "node_modules"
+    libexec.install "src", "scripts", "skills", "templates", "seashell", "package.json", "bun.lock", "node_modules"
     (libexec/"native").install "native/bin"
     (libexec/"whisper.cpp/build/bin").install "whisper.cpp/build/bin/whisper-cli",
                                             "whisper.cpp/build/bin/whisper-server"
@@ -139,6 +139,9 @@ class Seashell < Formula
         seashell meeting speakers setup
       Meetings split into pieces by older versions can be joined:
         seashell meeting merge --auto --dry-run
+      AI notes follow a template picked from the meeting title. To edit them,
+      and to tell the AI who you are, run:
+        seashell templates
       The permanent permission host is named Seashell Background.
       Background meetings now show live text and microphone/computer audio health.
       No browser extension or developer setting is required.
@@ -183,6 +186,10 @@ class Seashell < Formula
     init = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}'
     assert_match '"name":"seashell"', pipe_output("#{bin}/seashell mcp", "#{init}\n")
     assert_predicate libexec/"skills/seashell-meetings/SKILL.md", :exist?
+    # Notes templates ship built in; `seashell templates` copies them out to edit.
+    assert_predicate libexec/"templates/general.md", :exist?
+    ENV["SEASHELL_TEMPLATES_DIR"] = testpath/"Templates"
+    assert_match "Customer call", shell_output("#{bin}/seashell templates")
     (testpath/"meet-accessibility.json").write <<~JSON
       {
         "browsers": [{
