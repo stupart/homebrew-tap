@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/15b89af322f7a9d2c4e5e2d94d8101217210fd86.tar.gz"
-  version "1.1.0-rc27"
-  sha256 "f8b310b91208c92f5108e22f17920b66110914dc29e9f33dd04623d04ca4c06d"
+  url "https://github.com/stupart/seashell/archive/8ccd0c674304fd5d3cdce6207d3c9ecf030f5f9b.tar.gz"
+  version "1.1.0-rc28"
+  sha256 "f37627829b4b21073ef9d1928494d58a59b2252720a97d018f5944912d67006e"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -22,6 +22,12 @@ class Seashell < Formula
       url "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-darwin-x64.zip"
       sha256 "80520d7e17526308c9185d261679ac6d27798d3803a0e9f7ff9121ab8affb012"
     end
+  end
+
+  # Native speaker separation (seashell-speakers): pyannote community-1 as Core ML.
+  resource "fluidaudio" do
+    url "https://github.com/FluidInference/FluidAudio/archive/refs/tags/v0.17.7.tar.gz"
+    sha256 "e129e4dca8fabfb724b12d07cb2809d5db9698414d00b8d385ac86a6031e5eef"
   end
 
   resource "whisper-source" do
@@ -84,6 +90,10 @@ class Seashell < Formula
            "-DGGML_METAL_EMBED_LIBRARY=ON", *cpu_args
     system "cmake", "--build", "whisper.cpp/build", "--parallel", ENV.make_jobs,
            "--target", "whisper-cli", "whisper-server"
+    # Built offline from the staged source; its 21 MB models download at setup.
+    resource("fluidaudio").stage(buildpath/"vendor/FluidAudio")
+    (pkgshare/"licenses/fluidaudio").install buildpath/"vendor/FluidAudio/LICENSE"
+    ENV["SEASHELL_FLUIDAUDIO_PATH"] = buildpath/"vendor/FluidAudio"
     system "bash", "scripts/build-native.sh"
     ENV["BUN_INSTALL_CACHE_DIR"] = buildpath/"bun-cache"
     system libexec/"runtime/bin/bun", "install", "--frozen-lockfile", "--production"
@@ -126,7 +136,7 @@ class Seashell < Formula
         brew update && brew upgrade stupart/tap/seashell
 
       This is the tested 1.1.0 release candidate, pinned to its reviewed source.
-      Speaker diarization and Humain meeting intelligence are optional additions.
+      Speaker separation and Humain meeting intelligence are optional additions.
       Press V for experimental Google Meet speaker names in Chrome.
       Set up macOS Accessibility for this window and background meetings:
         seashell meeting speakers setup
@@ -148,8 +158,8 @@ class Seashell < Formula
       No browser extension or developer setting is required.
       While your Meet mic is unmuted, keep its People/Participants panel open.
       Safari speaker names are not yet verified.
-      For optional local voice separation, run:
-        seashell setup --speakers --login
+      For optional local voice separation (a 21 MB download, no account), run:
+        seashell setup --speakers
       Install a trusted private Humain package with:
         seashell ai install /path/to/humain-engine-0.0.1.tgz
       Use your meetings from Claude Code and Codex (read-only MCP server + skill):
@@ -182,6 +192,10 @@ class Seashell < Formula
     # Background microphone capture needs the self-responsible native recorder.
     assert_predicate libexec/"native/bin/seashell-microphone", :executable?
     assert_predicate libexec/"native/bin/seashell-calendar", :executable?
+    assert_predicate libexec/"native/bin/seashell-speakers", :executable?
+    assert_match "FluidAudio", shell_output("#{libexec}/native/bin/seashell-speakers --version")
+    ENV["SEASHELL_SPEAKER_MODELS"] = testpath/"speakers"
+    assert_match '"ready":false', shell_output("#{libexec}/native/bin/seashell-speakers --status")
     assert_match "No split meetings found.", shell_output("#{bin}/seashell meeting merge --auto --dry-run")
     # The meetings MCP server answers an initialize request over stdio.
     init = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}'
