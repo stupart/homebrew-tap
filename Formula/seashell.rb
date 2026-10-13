@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/7d01b48bf67a5fe900f5ed2f7b86ba6f71d1afac.tar.gz"
-  version "1.1.0-rc26"
-  sha256 "aed3608dbe9ee4f13abb2035c845fd6b26b802417e8efebc46d4a2e359ae33da"
+  url "https://github.com/stupart/seashell/archive/15b89af322f7a9d2c4e5e2d94d8101217210fd86.tar.gz"
+  version "1.1.0-rc27"
+  sha256 "f8b310b91208c92f5108e22f17920b66110914dc29e9f33dd04623d04ca4c06d"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -142,6 +142,7 @@ class Seashell < Formula
       AI notes follow a template picked from the meeting title. To edit them,
       and to tell the AI who you are, run:
         seashell templates
+      Press N in a meeting to change its template, add a note, or turn AI off.
       The permanent permission host is named Seashell Background.
       Background meetings now show live text and microphone/computer audio health.
       No browser extension or developer setting is required.
