@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/8ccd0c674304fd5d3cdce6207d3c9ecf030f5f9b.tar.gz"
-  version "1.1.0-rc28"
-  sha256 "f37627829b4b21073ef9d1928494d58a59b2252720a97d018f5944912d67006e"
+  url "https://github.com/stupart/seashell/archive/04674ecb9249a92821af76d49db91e7942c9a5e5.tar.gz"
+  version "1.1.0-rc29"
+  sha256 "1e8cbe7107db95fced5a54cdd75cfcd238b9c93cc6d59e80940ccec7738f7b1d"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -26,8 +26,8 @@ class Seashell < Formula
 
   # Native speaker separation (seashell-speakers): pyannote community-1 as Core ML.
   resource "fluidaudio" do
-    url "https://github.com/FluidInference/FluidAudio/archive/refs/tags/v0.17.7.tar.gz"
-    sha256 "e129e4dca8fabfb724b12d07cb2809d5db9698414d00b8d385ac86a6031e5eef"
+    url "https://github.com/FluidInference/FluidAudio/archive/refs/tags/v0.18.0.tar.gz"
+    sha256 "f39b4b33f56952dcb9b22b5d4808c8460e3c4570052013f17384f9e757eff160"
   end
 
   resource "whisper-source" do
