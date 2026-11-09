@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/2c4a72010f0c3a7d003e8db32b94eeb17803c2e0.tar.gz"
-  version "1.1.0-rc31"
-  sha256 "7f3b1ea7b4893cb4d5b6dcf85de318f0d26aa8794c37bcad99f80fe4892e96e6"
+  url "https://github.com/stupart/seashell/archive/7dd9a0f3742108777468a44f6ffcc739f5a9a3bd.tar.gz"
+  version "1.1.0-rc32"
+  sha256 "9921ca97a00859797352e13678257d9adf20383adeee79a6f7e8260b58beb15a"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -89,7 +89,7 @@ class Seashell < Formula
            "-DBUILD_SHARED_LIBS=OFF", "-DGGML_NATIVE=OFF", "-DGGML_METAL=#{metal}",
            "-DGGML_METAL_EMBED_LIBRARY=ON", *cpu_args
     system "cmake", "--build", "whisper.cpp/build", "--parallel", ENV.make_jobs,
-           "--target", "whisper-cli", "whisper-server"
+           "--target", "whisper-cli", "whisper-server", "whisper-vad-speech-segments"
     # Built offline from the staged source; its 21 MB models download at setup.
     resource("fluidaudio").stage(buildpath/"vendor/FluidAudio")
     (pkgshare/"licenses/fluidaudio").install buildpath/"vendor/FluidAudio/LICENSE"
@@ -101,7 +101,8 @@ class Seashell < Formula
     libexec.install "src", "scripts", "skills", "templates", "seashell", "package.json", "bun.lock", "node_modules"
     (libexec/"native").install "native/bin"
     (libexec/"whisper.cpp/build/bin").install "whisper.cpp/build/bin/whisper-cli",
-                                            "whisper.cpp/build/bin/whisper-server"
+                                            "whisper.cpp/build/bin/whisper-server",
+                                            "whisper.cpp/build/bin/whisper-vad-speech-segments"
     pkgshare.install "whisper.cpp/samples/jfk.wav"
     resource("whisper-model").stage do
       (libexec/"models").install "ggml-large-v3-turbo-q5_0.bin"
