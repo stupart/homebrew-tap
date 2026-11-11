@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/7dd9a0f3742108777468a44f6ffcc739f5a9a3bd.tar.gz"
-  version "1.1.0-rc32"
-  sha256 "9921ca97a00859797352e13678257d9adf20383adeee79a6f7e8260b58beb15a"
+  url "https://github.com/stupart/seashell/archive/0bc25f669593c29db20d76b44dd534a7e7a6a971.tar.gz"
+  version "1.1.0-rc33"
+  sha256 "d824c5493b09e8b22c2cc66943ee4a0285302d7372abc5f58d0e23bc8dae9b5c"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -194,6 +194,11 @@ class Seashell < Formula
     assert_predicate libexec/"native/bin/seashell-microphone", :executable?
     assert_predicate libexec/"native/bin/seashell-calendar", :executable?
     assert_predicate libexec/"native/bin/seashell-speakers", :executable?
+    # Computer audio and meeting video each get their own helper; neither prompts in a test.
+    assert_predicate libexec/"native/bin/seashell-system-audio", :executable?
+    assert_predicate libexec/"native/bin/seashell-screen-capture", :executable?
+    # The microphone converts every input format and layout to speech-level mono.
+    assert_match '"failures":[]', shell_output("#{libexec}/native/bin/seashell-microphone --mix-check")
     assert_match "FluidAudio", shell_output("#{libexec}/native/bin/seashell-speakers --version")
     ENV["SEASHELL_SPEAKER_MODELS"] = testpath/"speakers"
     assert_match '"ready":false', shell_output("#{libexec}/native/bin/seashell-speakers --status")
