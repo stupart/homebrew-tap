@@ -1,9 +1,9 @@
 class Seashell < Formula
   desc "Local meeting capture, transcription, and searchable transcript library"
   homepage "https://github.com/stupart/seashell"
-  url "https://github.com/stupart/seashell/archive/0bc25f669593c29db20d76b44dd534a7e7a6a971.tar.gz"
-  version "1.1.0-rc33"
-  sha256 "d824c5493b09e8b22c2cc66943ee4a0285302d7372abc5f58d0e23bc8dae9b5c"
+  url "https://github.com/stupart/seashell/archive/2162377365e3c371166ae93e01aeb938699e0656.tar.gz"
+  version "1.1.0-rc34"
+  sha256 "bca012dfbf3d7c55edccb8d369eb5a52c757e6f422ebbd1e80b225b503474cb5"
   license "MIT"
 
   depends_on "cmake" => :build
@@ -163,7 +163,7 @@ class Seashell < Formula
         seashell setup --speakers
       Install a trusted private Humain package with:
         seashell ai install /path/to/humain-engine-0.0.1.tgz
-      Use your meetings from Claude Code and Codex (read-only MCP server + skill):
+      Use your meetings from Claude Code and Codex (MCP server + skill):
         seashell mcp install
       Choose meeting AI interactively (or press P in the app):
         seashell ai setup
